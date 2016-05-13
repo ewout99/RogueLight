@@ -21,12 +21,12 @@ public class GameManager : MonoBehaviour {
     public int playerFoodPoints = 100;
 
     //Enemy Varibales
-    private List<Enemy> enemiesList = new List<Enemy>();
+    public List<Enemy> enemiesList = new List<Enemy>();
     
 
     //UI refrences
     private Text levelText;
-    private GameObject levelImage;
+    public GameObject levelImage;
 
 
     // [HideInInspector]
@@ -79,7 +79,6 @@ public class GameManager : MonoBehaviour {
 
     private void HideLevelImage()
     {
-        Debug.Log("Image is being hidden");
         levelImage.SetActive(false);
         doingSetup = false;
     }

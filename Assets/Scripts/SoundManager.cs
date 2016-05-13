@@ -16,12 +16,10 @@ public class SoundManager : MonoBehaviour {
 	void Awake () {
         if (instance == null)
         {
-            Debug.Log("Singleton set");
             instance = this;
         }
         else
         {
-            Debug.Log("Singleton already exists");
             Destroy(gameObject);
         }
         DontDestroyOnLoad(gameObject);

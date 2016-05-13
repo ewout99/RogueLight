@@ -6,6 +6,7 @@ public class Enemy : MoveObject{
 
     // Damage
     public int playerDmg;
+    public int health = 3;
 
     //Refrences
     private Animator aniRef;
@@ -61,5 +62,18 @@ public class Enemy : MoveObject{
         }
 
         AttemptMove<Player>(xDir, yDir);
+    }
+    
+    public void DamageEnemy(int amount)
+    {
+        health -= amount;
+        GetComponent<SpriteRenderer>().color = Color.yellow;
+        if (health == 0)
+        {
+            GetComponent<SpriteRenderer>().color = Color.red;
+            Destroy(gameObject, 0.2f);
+            GameManager.instance.enemiesList.Remove(this);
+        }
+        // Add sprite color change
     }
 }

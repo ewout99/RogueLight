@@ -9,7 +9,6 @@ public class Loader : MonoBehaviour {
 	void Awake () {
         if (GameManager.instance == null)
         {
-            Debug.Log("creating new GamaManager");
             Instantiate(gameManager);
         }
 	}

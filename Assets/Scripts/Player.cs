@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using System;
 using Random = UnityEngine.Random;
@@ -8,15 +9,17 @@ public class Player : MoveObject {
 
     // Vraibles for gameplay
     public int wallDamage = 1;
+    public int enemyDamage = 1;
     public int pointsPerFood = 10;
     public int pointsPerSoda = 20;
     public float restartLevelDelay = 1f;
+    public float shakeIntesity;
 
     //Mobile
     private Vector2 touchOrigin = -Vector2.one;
 
     // UI refrences
-    public Text foodText;
+    private Text foodText;
 
     // animations
     private Animator AniRef;
@@ -35,6 +38,7 @@ public class Player : MoveObject {
     // Use this for initialization
     protected override void Start ()
     {
+        foodText = GameObject.Find("Food Text").GetComponent<Text>();
         AniRef = GetComponent<Animator>();
         food = GameManager.instance.playerFoodPoints;
         foodText.text = "Food: " + food;
@@ -103,7 +107,8 @@ public class Player : MoveObject {
 
     private void Restart()
     {
-        Application.LoadLevel(Application.loadedLevel);  
+        SceneManager.LoadScene("Starting Scene");
+        //Application.LoadLevel(Application.loadedLevel);  
     }
 
     public void LoseFood (int loss)
@@ -128,6 +133,15 @@ public class Player : MoveObject {
         {
             SoundManager.instance.RandomSfx(moveSound1, moveSound2);
         }
+        else
+        {
+            // Raycast in the walk direction
+            if (hit.transform.tag == "Enemy")
+            {
+                AniRef.SetTrigger("PlayerChop");
+                hit.transform.gameObject.GetComponent<Enemy>().DamageEnemy(enemyDamage);
+            }
+        }
 
         CheckIfGameOver();
 
@@ -138,6 +152,10 @@ public class Player : MoveObject {
     {
         if (other.tag == "Exit")
         {
+            Debug.Log("Fade Called");
+            GameManager.instance.levelImage.SetActive(true);
+            FadeInAndOut.instance.Reset();
+            FadeInAndOut.instance.NextPanel();
             Invoke("Restart", restartLevelDelay);
             enabled = false;
         }
@@ -173,11 +191,20 @@ public class Player : MoveObject {
         Vector3 ogPos = camRef;
         for (int i = 0; i < 10; i++)
         {
-            float shakeAmount = Random.Range(-1,1) * Time.deltaTime;
-            camRef.x += shakeAmount;
-            camRef.y += shakeAmount;
+            float shakeAmount = Random.Range(-shakeIntesity,shakeIntesity) * Time.deltaTime;
+            if (i % 2 > 0)
+            {
+                camRef.x += shakeAmount;
+                camRef.y += shakeAmount;
+            }
+            else
+            {
+                camRef.x -= shakeAmount;
+                camRef.y -= shakeAmount;
+            }
+            
             Camera.main.transform.position = camRef;
-            yield return null;
+            yield return new WaitForSeconds(0.03f);
         }
         Camera.main.transform.position = ogPos;
     }

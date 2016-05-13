@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.UI;	//Allows us to use UI.
 
@@ -219,8 +220,8 @@ namespace Completed
 		//Restart reloads the scene when called.
 		private void Restart ()
 		{
-			//Load the last scene loaded, in this case Main, the only scene in the game.
-			Application.LoadLevel (Application.loadedLevel);
+            //Load the last scene loaded, in this case Main, the only scene in the game.
+            Application.LoadLevel (Application.loadedLevel);
 		}
 		
 		
