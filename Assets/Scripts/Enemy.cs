@@ -10,6 +10,7 @@ public class Enemy : MoveObject{
 
     //Refrences
     private Animator aniRef;
+    private SpriteRenderer spRef;
     private Transform target;
     private bool skipBool;
 
@@ -17,11 +18,16 @@ public class Enemy : MoveObject{
     public AudioClip enemyAttack1;
     public AudioClip enemyAttack2;
 
+    // Blood particle
+    [SerializeField]
+    private GameObject permenantBlood;
+
     // Use this for initialization
     protected override void Start () {
 
         GameManager.instance.AddEnemyList(this);
         aniRef = GetComponent<Animator>();
+        spRef = GetComponent<SpriteRenderer>();
         target = GameObject.FindGameObjectWithTag("Player").transform;
         base.Start();
 	}
@@ -61,19 +67,40 @@ public class Enemy : MoveObject{
             xDir = target.position.x > transform.position.x ? 1 : -1;
         }
 
+        // Flip sprite over x axis depeding on the move direction
+        if ( xDir == -1)
+        {
+            spRef.flipX = false;
+        }
+        else
+        {
+            spRef.flipX = true;
+        }
+
         AttemptMove<Player>(xDir, yDir);
     }
     
     public void DamageEnemy(int amount)
     {
         health -= amount;
-        GetComponent<SpriteRenderer>().color = Color.yellow;
+        Instantiate(permenantBlood, transform.position, Quaternion.identity);
+        StartCoroutine(CharacterFlash());
+    }
+
+    IEnumerator CharacterFlash()
+    {
+        if (health >= 0)
+        {
+            GetComponent<SpriteRenderer>().color = Color.yellow;
+            yield return new WaitForSeconds(0.1f);
+            GetComponent<SpriteRenderer>().color = Color.white;
+        }
+
         if (health == 0)
         {
             GetComponent<SpriteRenderer>().color = Color.red;
-            Destroy(gameObject, 0.2f);
             GameManager.instance.enemiesList.Remove(this);
+            Destroy(gameObject, 0.1f);
         }
-        // Add sprite color change
     }
 }

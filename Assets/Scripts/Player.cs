@@ -22,8 +22,11 @@ public class Player : MoveObject {
     private Text foodText;
 
     // animations
-    private Animator AniRef;
-    private int food;
+    private Animator aniRef;
+    private SpriteRenderer spRef;
+    private ParticleSystem parSysRef;
+    private Camera camRef;
+    public int food;
 
     // Audio Clips
     public AudioClip moveSound1;
@@ -34,27 +37,35 @@ public class Player : MoveObject {
     public AudioClip drinkSound2;
     public AudioClip gameOverSound;
 
+    // Blood referencs
+    [SerializeField]
+    private GameObject permenantBlood;
+    [SerializeField]
+    private GameObject slashSprite;
 
     // Use this for initialization
-    protected override void Start ()
+    protected override void Start()
     {
         foodText = GameObject.Find("Food Text").GetComponent<Text>();
-        AniRef = GetComponent<Animator>();
+        aniRef = GetComponent<Animator>();
+        spRef = GetComponent<SpriteRenderer>();
+        camRef = GetComponentInChildren<Camera>();
         food = GameManager.instance.playerFoodPoints;
         foodText.text = "Food: " + food;
         base.Start();
-	}
-	
+    }
+
     private void OnDisable()
     {
         GameManager.instance.playerFoodPoints = food;
     }
 
-	// Update is called once per frame
-	void Update () {
+    // Update is called once per frame
+    void Update() {
 
         if (!GameManager.instance.playersTurn)
         {
+            aniRef.SetBool("Walking", false);
             return;
         }
 
@@ -63,8 +74,8 @@ public class Player : MoveObject {
 
 #if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
 
-        horizontal = (int) (Input.GetAxisRaw("Horizontal"));
-        vertical = (int) (Input.GetAxisRaw("Vertical"));
+        horizontal = (int)(Input.GetAxisRaw("Horizontal"));
+        vertical = (int)(Input.GetAxisRaw("Vertical"));
         // Debug.Log("Hor input: " + horizontal + " Ver input: " + vertical);
 
         if (horizontal != 0)
@@ -96,13 +107,30 @@ public class Player : MoveObject {
         {
             AttemptMove<Wall>(horizontal, vertical);
         }
+
+        Vector2 moveVecInput = new Vector2(horizontal, vertical);
+
+        if (moveVecInput.x > 0 || moveVecInput.x < 0 || moveVecInput.y > 0 || moveVecInput.y < 0)
+        {
+            aniRef.SetBool("Walking", true);
+         
+
+            if (moveVecInput.x < 0)
+            {
+                spRef.flipX = true;
+            }
+            else if (moveVecInput.x > 0)
+            {
+                spRef.flipX = false;
+            }
+        }
     }
 
     protected override void OnCantMove<T>(T component)
     {
         Wall hitWall = component as Wall;
         hitWall.DamageWall(wallDamage);
-        AniRef.SetTrigger("PlayerChop");
+        aniRef.SetTrigger("PlayerChop");
     }
 
     private void Restart()
@@ -111,13 +139,15 @@ public class Player : MoveObject {
         //Application.LoadLevel(Application.loadedLevel);  
     }
 
-    public void LoseFood (int loss)
+    public void LoseFood(int loss)
     {
-        AniRef.SetTrigger("PlayerHit");
+        aniRef.SetTrigger("PlayerHit");
         food -= loss;
-        foodText.text = "- " + loss + "Food: " + food;
+        foodText.text = "-" + loss + ", Food: " + food;
         StartCoroutine(StartScreenShake());
+        StartCoroutine(ColorFlash());
         CheckIfGameOver();
+        Instantiate(permenantBlood, transform.position, Quaternion.identity);
     }
 
     protected override void AttemptMove<T>(int xDir, int yDir)
@@ -138,8 +168,10 @@ public class Player : MoveObject {
             // Raycast in the walk direction
             if (hit.transform.tag == "Enemy")
             {
-                AniRef.SetTrigger("PlayerChop");
+                aniRef.SetTrigger("PlayerChop");
                 hit.transform.gameObject.GetComponent<Enemy>().DamageEnemy(enemyDamage);
+                slashSprite.SetActive(true);
+                Invoke("DeActivate", 0.1f);
             }
         }
 
@@ -148,7 +180,7 @@ public class Player : MoveObject {
         GameManager.instance.playersTurn = false;
     }
 
-    private void OnTriggerEnter2D (Collider2D other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.tag == "Exit")
         {
@@ -166,7 +198,7 @@ public class Player : MoveObject {
             SoundManager.instance.RandomSfx(eatSound1, eatSound2);
             other.gameObject.SetActive(false);
         }
-        else if (other.tag =="Soda")
+        else if (other.tag == "Soda")
         {
             food += pointsPerSoda;
             foodText.text = "+" + pointsPerSoda + ", Food: " + food;
@@ -184,28 +216,42 @@ public class Player : MoveObject {
         }
     }
 
-    
+
     IEnumerator StartScreenShake()
     {
-        Vector3 camRef = Camera.main.transform.position;
-        Vector3 ogPos = camRef;
+        Vector3 ogPos = camRef.transform.position;
+        Vector3 newPos = ogPos;
         for (int i = 0; i < 10; i++)
         {
-            float shakeAmount = Random.Range(-shakeIntesity,shakeIntesity) * Time.deltaTime;
+            float shakeAmount = Random.Range(-shakeIntesity, shakeIntesity) * Time.deltaTime;
             if (i % 2 > 0)
             {
-                camRef.x += shakeAmount;
-                camRef.y += shakeAmount;
+                newPos.x += shakeAmount;
+                newPos.y += shakeAmount;
             }
             else
             {
-                camRef.x -= shakeAmount;
-                camRef.y -= shakeAmount;
+                newPos.x -= shakeAmount;
+                newPos.y -= shakeAmount;
             }
-            
-            Camera.main.transform.position = camRef;
+            camRef.gameObject.transform.position = newPos;
             yield return new WaitForSeconds(0.03f);
         }
-        Camera.main.transform.position = ogPos;
+        camRef.gameObject.transform.position = gameObject.transform.position;
+    }
+
+    IEnumerator ColorFlash()
+    {
+        Color Hold = camRef.backgroundColor;
+        spRef.color = Color.yellow;
+        camRef.backgroundColor = Color.white;
+        yield return new WaitForSeconds(0.1f);
+        spRef.color = Color.white;
+        camRef.backgroundColor = Hold;
+    }
+
+    void DeActivate()
+    {
+        slashSprite.SetActive(false);
     }
 }

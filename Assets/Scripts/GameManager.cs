@@ -38,13 +38,14 @@ public class GameManager : MonoBehaviour {
     void Awake () {
         if (instance == null)
         {
-            Debug.Log("Singleton is made");
+            Debug.Log("Singleton is made: GameManager");
             instance = this;
         }
         else if (instance != this)
         {
             Debug.Log("Singleton already exists");
             Destroy(gameObject);
+            return;
         }
         DontDestroyOnLoad(gameObject);
         boardScript = GetComponent<BoardManager>();

@@ -23,6 +23,7 @@ public class FadeInAndOut : MonoBehaviour {
         if (instance == null)
         {
             instance = this;
+            Debug.Log("Singleton is made FadeInAndOut");
         }
         else
         {
