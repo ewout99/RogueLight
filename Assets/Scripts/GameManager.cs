@@ -95,6 +95,7 @@ public class GameManager : MonoBehaviour {
 
     public void GameOver()
     {
+        levelImage.gameObject.GetComponent<CanvasGroup>().alpha = 1;
         levelText.text = "After " + level + " horrible days you were eaten by ghouls.";
         levelImage.SetActive(true);
         enabled = false;

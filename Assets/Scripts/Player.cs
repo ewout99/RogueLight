@@ -237,7 +237,9 @@ public class Player : MoveObject {
             camRef.gameObject.transform.position = newPos;
             yield return new WaitForSeconds(0.03f);
         }
-        camRef.gameObject.transform.position = gameObject.transform.position;
+        newPos = gameObject.transform.position;
+        newPos.z = -10f;
+        camRef.gameObject.transform.position = newPos;
     }
 
     IEnumerator ColorFlash()
